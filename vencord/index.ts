@@ -1,7 +1,12 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { updateMessage } from "@api/MessageUpdater";
 import { definePluginSettings } from "@api/Settings";
 import { OptionType, type PluginDef } from "@utils/types";
-import type { Message } from "@vencord/discord-types";
 import { MessageStore, SelectedChannelStore } from "@webpack/common";
 
 import {
@@ -89,7 +94,7 @@ function refreshDisplayedLinks() {
     const channelId = SelectedChannelStore.getChannelId();
     if (!channelId) return;
 
-    const messages = MessageStore.getMessages(channelId) as Message[];
+    const messages = MessageStore.getMessages(channelId)._array;
     messages.forEach(message => {
         if (!message.content) return;
 
