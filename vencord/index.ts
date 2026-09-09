@@ -7,8 +7,9 @@
 import { updateMessage } from "@api/MessageUpdater";
 import { definePluginSettings } from "@api/Settings";
 import { OptionType, type PluginDef } from "@utils/types";
-import { MessageStore, SelectedChannelStore } from "@webpack/common";
+import { MessageStore, RestAPI, SelectedChannelStore } from "@webpack/common";
 
+import { patchMessageRequests } from "../common/messageRequests";
 import {
     convertXUrls,
     CUSTOM_DOMAIN_VALUE,
@@ -26,7 +27,7 @@ const settings = definePluginSettings({
     convertAlreadySentMessages: {
         displayName: "Convert Already Sent Messages",
         type: OptionType.BOOLEAN,
-        description: "Locally convert supported links in already-sent messages from all users; never sends a message",
+        description: "Locally convert links in already-sent messages; existing embeds stay unchanged and no message is sent",
         default: true,
         onChange: reapplyDisplayedLinks
     },
@@ -67,14 +68,11 @@ function convertContent(content: string) {
     );
 }
 
-function rewriteOwnMessage(message: { content?: string; }) {
-    if (!settings.store.convertMessagesISend || !message.content) return;
-    message.content = convertContent(message.content).content;
-}
 
 const originalMessageContent = new Map<string, { channelId: string; content: string }>();
 let refreshScheduled = false;
 let running = false;
+let unpatchRequests: (() => void) | undefined;
 
 function restoreDisplayedLinks() {
     const originals = [...originalMessageContent.entries()];
@@ -130,15 +128,11 @@ export const vencordPlugin = {
     authors: [{ name: "brainage04", id: 0n }],
     settings,
 
-    onBeforeMessageSend(_channelId: string, message: { content?: string; }) {
-        rewriteOwnMessage(message);
-    },
-
-    onBeforeMessageEdit(_channelId: string, _messageId: string, message: { content?: string; }) {
-        rewriteOwnMessage(message);
-    },
 
     start() {
+        unpatchRequests = patchMessageRequests(RestAPI, content =>
+            settings.store.convertMessagesISend ? convertContent(content).content : content
+        );
         running = true;
         MessageStore.addChangeListener(scheduleDisplayedLinkRefresh);
         SelectedChannelStore.addChangeListener(scheduleDisplayedLinkRefresh);
@@ -146,6 +140,8 @@ export const vencordPlugin = {
     },
 
     stop() {
+        unpatchRequests?.();
+        unpatchRequests = undefined;
         running = false;
         MessageStore.removeChangeListener(scheduleDisplayedLinkRefresh);
         SelectedChannelStore.removeChangeListener(scheduleDisplayedLinkRefresh);

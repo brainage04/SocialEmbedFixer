@@ -2,6 +2,7 @@ import { findByProps } from "@vendetta/metro";
 import { ReactNative as RN } from "@vendetta/metro/common";
 import { before } from "@vendetta/patcher";
 
+import { type MessageRestClient, patchMessageRequests } from "../../common/messageRequests";
 import { convertXUrls, resolveEmbedDomain } from "../../common/xUrls";
 import Settings from "./settings";
 import { initializeStorage, pluginStorage } from "./state";
@@ -24,7 +25,6 @@ interface NativeChatManager {
     updateRows(channelId: string, rowsJson: string): void;
 }
 
-const Messages = findByProps("sendMessage", "editMessage");
 const NativeChatModule = (
     RN.NativeModules.RTNChatManager
     ?? RN.NativeModules.DCDChatManager
@@ -42,10 +42,6 @@ function convertContent(content: string) {
     );
 }
 
-function rewriteOwnMessage(message: { content?: string }) {
-    if (!pluginStorage.convertMessagesISend || !message?.content) return;
-    message.content = convertContent(message.content).content;
-}
 
 function rewriteContentNodes(nodes: ContentNode[]) {
     for (const node of nodes) {
@@ -91,17 +87,15 @@ function patchDisplayedMessageRows() {
 function onLoad() {
     initializeStorage();
 
-    const unpatchSend = before("sendMessage", Messages, args => {
-        rewriteOwnMessage(args[1]);
-    });
-    const unpatchEdit = before("editMessage", Messages, args => {
-        rewriteOwnMessage(args[2]);
-    });
+    const rest = findByProps("get", "post", "put", "patch", "del") as MessageRestClient | undefined;
+    if (!rest) throw new Error("XEmbedFixer could not locate Discord's REST client");
     const unpatchRows = patchDisplayedMessageRows();
+    const unpatchRequests = patchMessageRequests(rest, content =>
+        pluginStorage.convertMessagesISend ? convertContent(content).content : content
+    );
 
     cleanup = () => {
-        unpatchSend();
-        unpatchEdit();
+        unpatchRequests();
         unpatchRows();
     };
 }

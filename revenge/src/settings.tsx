@@ -21,7 +21,7 @@ function SettingsContent() {
                 />
                 <FormSwitchRow
                     label="Convert Already Sent Messages"
-                    subLabel="Locally converts supported links in messages from all users and never sends a message"
+                    subLabel="Locally converts links only; existing embeds stay unchanged and no message is sent"
                     value={pluginStorage.convertAlreadySentMessages}
                     onValueChange={(value: boolean) => { pluginStorage.convertAlreadySentMessages = value; }}
                 />
