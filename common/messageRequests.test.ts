@@ -7,12 +7,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { convertUrls } from "./embedUrls";
 import { type MessageRestClient, patchMessageRequests } from "./messageRequests";
-import { convertXUrls } from "./xUrls";
 
 const source = "https://x.com/example/status/123";
 const fixed = "https://fixupx.com/example/status/123";
-const convert = (content: string) => convertXUrls(content, "fixupx.com").content;
+const convert = (content: string) => convertUrls(content, { x: "fixupx.com", instagram: "vxinstagram.com" }).content;
 
 function transport() {
     const requests: unknown[] = [];

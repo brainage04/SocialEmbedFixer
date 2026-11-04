@@ -5,23 +5,59 @@
  */
 
 import { updateMessage } from "@api/MessageUpdater";
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, migratePluginSetting, migratePluginSettings } from "@api/Settings";
 import { OptionType, type PluginDef } from "@utils/types";
 import { MessageStore, RestAPI, SelectedChannelStore } from "@webpack/common";
 
-import { patchMessageRequests } from "../common/messageRequests";
 import {
-    convertXUrls,
+    convertUrls,
     CUSTOM_DOMAIN_VALUE,
-    EMBED_DOMAINS,
+    type Platform,
+    PLATFORMS,
     resolveEmbedDomain
-} from "../common/xUrls";
+} from "../common/embedUrls";
+import { patchMessageRequests } from "../common/messageRequests";
+
+// Must match the literal name in ../index.ts, which Vencord's build requires to be a string literal.
+const PLUGIN_NAME = "SocialEmbedFixer";
+
+// Keep the settings of the plugin's earlier, X-only name.
+migratePluginSettings(PLUGIN_NAME, "XEmbedFixer");
+migratePluginSetting(PLUGIN_NAME, "domain", "xDomain");
+migratePluginSetting(PLUGIN_NAME, "customDomain", "xCustomDomain");
+
+function serviceSetting(platform: Platform) {
+    const { label, services } = PLATFORMS[platform];
+    return {
+        type: OptionType.SELECT as const,
+        description: `${label} embed service`,
+        options: [
+            ...services.map((service, index) => ({
+                label: service.label,
+                value: service.value,
+                default: index === 0
+            })),
+            { label: "Custom domain", value: CUSTOM_DOMAIN_VALUE }
+        ],
+        onChange: reapplyDisplayedLinks
+    };
+}
+
+function customDomainSetting(platform: Platform) {
+    const { label, services } = PLATFORMS[platform];
+    return {
+        type: OptionType.STRING as const,
+        description: `Custom hostname used when the ${label} embed service is Custom (invalid values fall back to ${services[0].label})`,
+        default: "",
+        onChange: reapplyDisplayedLinks
+    };
+}
 
 const settings = definePluginSettings({
     convertMessagesISend: {
         displayName: "Convert Messages I Send",
         type: OptionType.BOOLEAN,
-        description: "Rewrite X/Twitter and supported embed-service links before your messages and edits are sent",
+        description: "Rewrite supported X/Twitter and Instagram links before your messages and edits are sent",
         default: true
     },
     convertAlreadySentMessages: {
@@ -34,37 +70,26 @@ const settings = definePluginSettings({
     convertOtherServiceDomains: {
         displayName: "Convert Other Service Domains",
         type: OptionType.BOOLEAN,
-        description: "Convert links using another supported embed-service domain to the selected domain",
+        description: "Convert links using another known embed service to the service selected for that platform",
         default: true,
         onChange: reapplyDisplayedLinks
     },
-    domain: {
-        type: OptionType.SELECT,
-        description: "Embed service domain",
-        options: [
-            ...EMBED_DOMAINS.map((domain, index) => ({
-                label: domain.label,
-                value: domain.value,
-                default: index === 0
-            })),
-            { label: "Custom domain", value: CUSTOM_DOMAIN_VALUE }
-        ],
-        onChange: reapplyDisplayedLinks
-    },
-    customDomain: {
-        type: OptionType.STRING,
-        description: "Custom hostname used when Embed service domain is Custom (invalid values fall back to FixupX)",
-        default: "",
-        onChange: reapplyDisplayedLinks
-    }
+    xDomain: serviceSetting("x"),
+    xCustomDomain: customDomainSetting("x"),
+    instagramDomain: serviceSetting("instagram"),
+    instagramCustomDomain: customDomainSetting("instagram")
 });
 
 
 function convertContent(content: string) {
-    return convertXUrls(
+    const { store } = settings;
+    return convertUrls(
         content,
-        resolveEmbedDomain(settings.store.domain, settings.store.customDomain),
-        settings.store.convertOtherServiceDomains
+        {
+            x: resolveEmbedDomain("x", store.xDomain, store.xCustomDomain),
+            instagram: resolveEmbedDomain("instagram", store.instagramDomain, store.instagramCustomDomain)
+        },
+        store.convertOtherServiceDomains
     );
 }
 
@@ -123,7 +148,7 @@ function reapplyDisplayedLinks() {
 }
 
 export const vencordPlugin = {
-    description: "Rewrites supported X/Twitter links you send and locally converts links in already-sent messages.",
+    description: "Rewrites X/Twitter and Instagram links you send to embed-friendly services and locally converts links in already-sent messages.",
     tags: ["Chat", "Utility"],
     authors: [{ name: "brainage04", id: 0n }],
     settings,

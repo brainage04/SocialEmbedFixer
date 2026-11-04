@@ -1,6 +1,6 @@
 {
-  "name": "XEmbedFixer",
-  "description": "Rewrites X/Twitter links to a selectable embed-friendly service.",
+  "name": "SocialEmbedFixer",
+  "description": "Rewrites X/Twitter and Instagram links to selectable embed-friendly services.",
   "authors": [
     {
       "name": "brainage04",

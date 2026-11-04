@@ -2,8 +2,8 @@ import { findByProps } from "@vendetta/metro";
 import { ReactNative as RN } from "@vendetta/metro/common";
 import { before } from "@vendetta/patcher";
 
+import { convertUrls, resolveEmbedDomain } from "../../common/embedUrls";
 import { type MessageRestClient, patchMessageRequests } from "../../common/messageRequests";
-import { convertXUrls, resolveEmbedDomain } from "../../common/xUrls";
 import Settings from "./settings";
 import { initializeStorage, pluginStorage } from "./state";
 
@@ -35,9 +35,12 @@ let cleanup: (() => void) | undefined;
 
 
 function convertContent(content: string) {
-    return convertXUrls(
+    return convertUrls(
         content,
-        resolveEmbedDomain(pluginStorage.domain, pluginStorage.customDomain),
+        {
+            x: resolveEmbedDomain("x", pluginStorage.xDomain, pluginStorage.xCustomDomain),
+            instagram: resolveEmbedDomain("instagram", pluginStorage.instagramDomain, pluginStorage.instagramCustomDomain)
+        },
         pluginStorage.convertOtherServiceDomains
     );
 }
@@ -60,7 +63,7 @@ function rewriteContentNodes(nodes: ContentNode[]) {
 
 function patchDisplayedMessageRows() {
     if (!NativeChatModule?.updateRows)
-        throw new Error("XEmbedFixer could not locate Revenge's native chat row manager");
+        throw new Error("SocialEmbedFixer could not locate Revenge's native chat row manager");
 
     return before("updateRows", NativeChatModule, args => {
         if (!pluginStorage.convertAlreadySentMessages || typeof args[1] !== "string") return;
@@ -88,7 +91,7 @@ function onLoad() {
     initializeStorage();
 
     const rest = findByProps("get", "post", "put", "patch", "del") as MessageRestClient | undefined;
-    if (!rest) throw new Error("XEmbedFixer could not locate Discord's REST client");
+    if (!rest) throw new Error("SocialEmbedFixer could not locate Discord's REST client");
     const unpatchRows = patchDisplayedMessageRows();
     const unpatchRequests = patchMessageRequests(rest, content =>
         pluginStorage.convertMessagesISend ? convertContent(content).content : content

@@ -1,19 +1,25 @@
 import { storage } from "@vendetta/plugin";
 
-export interface XEmbedFixerStorage {
+import { defaultEmbedDomain } from "../../common/embedUrls";
+
+export interface SocialEmbedFixerStorage {
     convertAlreadySentMessages: boolean;
     convertMessagesISend: boolean;
     convertOtherServiceDomains: boolean;
-    customDomain: string;
-    domain: string;
+    xDomain: string;
+    xCustomDomain: string;
+    instagramDomain: string;
+    instagramCustomDomain: string;
 }
 
-export const pluginStorage = storage as XEmbedFixerStorage;
+export const pluginStorage = storage as SocialEmbedFixerStorage;
 
 export function initializeStorage() {
     pluginStorage.convertMessagesISend ??= true;
     pluginStorage.convertAlreadySentMessages ??= true;
     pluginStorage.convertOtherServiceDomains ??= true;
-    pluginStorage.domain ??= "fixupx.com";
-    pluginStorage.customDomain ??= "";
+    pluginStorage.xDomain ??= defaultEmbedDomain("x");
+    pluginStorage.xCustomDomain ??= "";
+    pluginStorage.instagramDomain ??= defaultEmbedDomain("instagram");
+    pluginStorage.instagramCustomDomain ??= "";
 }
