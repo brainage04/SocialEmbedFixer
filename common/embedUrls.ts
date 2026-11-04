@@ -36,8 +36,7 @@ export const PLATFORMS: Record<Platform, PlatformDefinition> = {
         ],
         sourceHosts: ["x.com", "twitter.com", "mobile.x.com", "mobile.twitter.com"],
         serviceHosts: [
-            "fixupx.com", "fxtwitter.com", "fixvx.com", "vxtwitter.com", "twittpr.com", "xfixup.com",
-            "girlcockx.com", "cunnyx.com", "stupidpenisx.com"
+            "fixupx.com", "fxtwitter.com", "fixvx.com", "vxtwitter.com", "twittpr.com", "xfixup.com"
         ],
         convertiblePath: /^\//
     },
