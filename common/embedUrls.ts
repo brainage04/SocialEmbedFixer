@@ -21,6 +21,8 @@ interface PlatformDefinition {
     serviceHosts: readonly string[];
     /** Only links to these paths are converted; profile and other pages are left alone. */
     convertiblePath: RegExp;
+    /** Rewrites a convertible path to the form every offered service accepts. */
+    canonicalPath?(pathname: string): string;
 }
 
 export const PLATFORMS: Record<Platform, PlatformDefinition> = {
@@ -52,7 +54,10 @@ export const PLATFORMS: Record<Platform, PlatformDefinition> = {
             "hhinstagram.com", "eeinstagram.com", "uuinstagram.com", "toinstagram.com", "ddinstagram.com",
             "fxstagram.com", "instagramez.com"
         ],
-        convertiblePath: /^\/(?:[\w.]+\/)?(?:p|reels?|tv)\/[\w-]+/
+        // /share/ links carry a redirect token, not a post ID, and not every service resolves them.
+        convertiblePath: /^\/(?!share\/)(?:[\w.]+\/)?(?:p|reels?|tv)\/[\w-]+/,
+        // OGInstagram 404s on /tv/; the same ID works as /p/ on every offered service.
+        canonicalPath: pathname => pathname.replace(/^(\/(?:[\w.]+\/)?)tv\//, "$1p/")
     }
 };
 
@@ -129,13 +134,15 @@ export function convertUrls(
             const url = new URL(source);
             const match = HOSTS.get(url.hostname.toLowerCase());
             if (!match || (!match.isSource && !convertOtherServiceDomains)) return rawMatch;
-            if (!PLATFORMS[match.platform].convertiblePath.test(url.pathname)) return rawMatch;
+            const platform = PLATFORMS[match.platform];
+            if (!platform.convertiblePath.test(url.pathname)) return rawMatch;
 
             const domain = normalizeEmbedDomain(match.platform, domains[match.platform])
                 ?? defaultEmbedDomain(match.platform);
             if (url.hostname.toLowerCase() === domain) return rawMatch;
 
             url.hostname = domain;
+            if (platform.canonicalPath) url.pathname = platform.canonicalPath(url.pathname);
             const replacement = url.toString();
             convertedUrls.push(replacement);
             return replacement + trailing;

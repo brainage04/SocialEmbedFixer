@@ -41,12 +41,17 @@ test("rewrites Instagram post, reel and TV links on every Instagram host to the 
         "https://vxinstagram.com/reel/Dct2UGbBBTn/?igsh=abc",
         "https://vxinstagram.com/reels/Dct2UGbBBTn",
         "https://vxinstagram.com/nasa/p/DcpM33KtEqZ/",
-        "(https://vxinstagram.com/tv/Dct2UGbBBTn/)"
+        "(https://vxinstagram.com/p/Dct2UGbBBTn/)"
     ].join(" "));
 });
 
-test("leaves Instagram profile and non-post pages unchanged", () => {
-    const input = "https://www.instagram.com/nasa/ https://www.instagram.com/explore/tags/space/ https://www.instagram.com/";
+test("leaves Instagram profile, share and other non-post pages unchanged", () => {
+    const input = [
+        "https://www.instagram.com/nasa/",
+        "https://www.instagram.com/explore/tags/space/",
+        "https://www.instagram.com/share/reel/BAabc123/",
+        "https://www.instagram.com/"
+    ].join(" ");
     assert.deepEqual(convertUrls(input, domains), { content: input, convertedUrls: [] });
 });
 
