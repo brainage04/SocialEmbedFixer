@@ -36,10 +36,6 @@ html:root {
   margin: 0;
 }
 
-.install-panel {
-  --panel-border: var(--border-strong);
-}
-
 /* WebTUI makes inline code an inline-block, which pushes long paths onto their own line. */
 :is(p, li, td, dd) code {
   display: inline;

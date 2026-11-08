@@ -23,12 +23,12 @@ const installerCommands = [
       <p class="lead">{plugin.summary}</p>
       <div class="hero-actions">
         <a class="action-button" href="#revenge">Install on Revenge</a>
-        <a class="action-button action-button--ghost" href="#vencord">Install on Vesktop</a>
-        <a class="action-button action-button--ghost" href={sourceHref}>Source on GitHub</a>
+        <a class="action-button" href="#vencord">Install on Vesktop</a>
+        <a class="action-button" href={sourceHref}>Source on GitHub</a>
       </div>
     </header>
 
-    <TerminalPanel title="Install on Revenge" id="revenge" class="install-panel">
+    <TerminalPanel title="Install on Revenge" id="revenge">
       <div class="panel-copy">
         <p>Add the plugin to Revenge on Android with this URL:</p>
         <div class="url-row">
