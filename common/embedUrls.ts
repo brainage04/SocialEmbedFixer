@@ -53,7 +53,8 @@ export const PLATFORMS: Record<Platform, PlatformDefinition> = {
             "hhinstagram.com", "eeinstagram.com", "uuinstagram.com", "toinstagram.com", "ddinstagram.com",
             "fxstagram.com", "instagramez.com"
         ],
-        // /share/ links carry a redirect token, not a post ID, and not every service resolves them.
+        // VXInstagram 404s on profile pages, and VXInstagram and OGInstagram 404 on /share/ links,
+        // which carry a redirect token instead of a post ID, so both stay on instagram.com.
         convertiblePath: /^\/(?!share\/)(?:[\w.]+\/)?(?:p|reels?|tv)\/[\w-]+/,
         // OGInstagram 404s on /tv/; the same ID works as /p/ on every offered service.
         canonicalPath: pathname => pathname.replace(/^(\/(?:[\w.]+\/)?)tv\//, "$1p/")
@@ -88,9 +89,14 @@ const URL_PATTERN = /https?:\/\/[^\s<>{}]+/gi;
 const TRAILING_PUNCTUATION = /[),.!?;:'"\]}]+$/;
 const DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 
+export interface LinkConversion {
+    from: string;
+    to: string;
+}
+
 export interface ConvertedText {
     content: string;
-    convertedUrls: string[];
+    conversions: LinkConversion[];
 }
 
 /** A bare hostname for a custom service, or null when it is invalid or is the platform's own site. */
@@ -123,7 +129,7 @@ export function convertUrls(
     domains: EmbedDomains,
     convertOtherServiceDomains = false
 ): ConvertedText {
-    const convertedUrls: string[] = [];
+    const conversions: LinkConversion[] = [];
 
     const converted = content.replace(URL_PATTERN, rawMatch => {
         const trailing = rawMatch.match(TRAILING_PUNCTUATION)?.[0] ?? "";
@@ -143,12 +149,34 @@ export function convertUrls(
             url.hostname = domain;
             if (platform.canonicalPath) url.pathname = platform.canonicalPath(url.pathname);
             const replacement = url.toString();
-            convertedUrls.push(replacement);
+            conversions.push({ from: source, to: replacement });
             return replacement + trailing;
         } catch {
             return rawMatch;
         }
     });
 
-    return { content: converted, convertedUrls };
+    return { content: converted, conversions };
+}
+
+function linkIdentity(value: string) {
+    try {
+        const url = new URL(value);
+        const match = HOSTS.get(url.hostname.toLowerCase());
+        if (!match) return null;
+        const { canonicalPath } = PLATFORMS[match.platform];
+        const path = (canonicalPath ? canonicalPath(url.pathname) : url.pathname).replace(/\/+$/, "").toLowerCase();
+        return `${match.platform}:${path}`;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Whether two links point at the same post on hosts of the same platform, such as an embed
+ * made for https://fixvx.com/a/status/1 (whose URL is https://vxtwitter.com/a/status/1) and that link.
+ */
+export function isSameLink(a: string, b: string): boolean {
+    const identity = linkIdentity(a);
+    return identity !== null && identity === linkIdentity(b);
 }
