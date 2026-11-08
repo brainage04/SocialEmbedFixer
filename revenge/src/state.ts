@@ -23,3 +23,14 @@ export function initializeStorage() {
     pluginStorage.instagramDomain ??= defaultEmbedDomain("instagram");
     pluginStorage.instagramCustomDomain ??= "";
 }
+
+let settingsChanged: (() => void) | undefined;
+
+export function onSettingsChanged(listener: (() => void) | undefined) {
+    settingsChanged = listener;
+}
+
+export function setSetting<K extends keyof SocialEmbedFixerStorage>(key: K, value: SocialEmbedFixerStorage[K]) {
+    pluginStorage[key] = value;
+    settingsChanged?.();
+}

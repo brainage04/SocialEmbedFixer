@@ -1,35 +1,36 @@
-import { findByProps } from "@vendetta/metro";
-import { ReactNative as RN } from "@vendetta/metro/common";
-import { before } from "@vendetta/patcher";
+import { findByProps, findByStoreName } from "@vendetta/metro";
+import { FluxDispatcher } from "@vendetta/metro/common";
 
 import { convertUrls, resolveEmbedDomain } from "../../common/embedUrls";
 import { type MessageRestClient, patchMessageRequests } from "../../common/messageRequests";
+import { type ChatMessage, createEmbedLoader, createSentMessageConverter, type UnfurlRestClient } from "../../common/sentMessages";
 import Settings from "./settings";
-import { initializeStorage, pluginStorage } from "./state";
+import { initializeStorage, onSettingsChanged, pluginStorage } from "./state";
 
-interface ContentNode {
-    content?: string | ContentNode[];
-    items?: ContentNode[];
-    target?: string;
-    type?: string;
+interface ChangeEmitter {
+    addChangeListener(listener: () => void): void;
+    removeChangeListener(listener: () => void): void;
 }
 
-interface ChatRow {
-    message?: {
-        content?: string | ContentNode[];
-    };
-    type?: number;
+interface MessageStore extends ChangeEmitter {
+    getMessages(channelId: string): { _array: ChatMessage[]; };
+    getMessage(channelId: string, messageId: string): ChatMessage | undefined;
+    emitChange(): void;
 }
 
-interface NativeChatManager {
-    updateRows(channelId: string, rowsJson: string): void;
+interface SelectedChannelStore extends ChangeEmitter {
+    getChannelId(): string | null | undefined;
 }
 
-const NativeChatModule = (
-    RN.NativeModules.RTNChatManager
-    ?? RN.NativeModules.DCDChatManager
-    ?? RN.NativeModules.NativeChatModule
-) as NativeChatManager | undefined;
+interface ChannelMessages {
+    has(messageId: string): boolean;
+    update(messageId: string, change: (message: { merge(fields: object): unknown; }) => unknown): ChannelMessages;
+}
+
+interface MessageCache {
+    getOrCreate(channelId: string): ChannelMessages;
+    commit(messages: ChannelMessages): void;
+}
 
 let cleanup: (() => void) | undefined;
 
@@ -45,61 +46,64 @@ function convertContent(content: string) {
     );
 }
 
-
-function rewriteContentNodes(nodes: ContentNode[]) {
-    for (const node of nodes) {
-        if (node.type === "link" && typeof node.target === "string")
-            node.target = convertContent(node.target).content;
-
-        if (typeof node.content === "string")
-            node.content = convertContent(node.content).content;
-        else if (Array.isArray(node.content))
-            rewriteContentNodes(node.content);
-
-        if (Array.isArray(node.items))
-            rewriteContentNodes(node.items);
-    }
-}
-
-function patchDisplayedMessageRows() {
-    if (!NativeChatModule?.updateRows)
-        throw new Error("SocialEmbedFixer could not locate Revenge's native chat row manager");
-
-    return before("updateRows", NativeChatModule, args => {
-        if (!pluginStorage.convertAlreadySentMessages || typeof args[1] !== "string") return;
-
-        const rows = JSON.parse(args[1]) as unknown;
-        if (!Array.isArray(rows)) return;
-
-        for (const candidate of rows) {
-            if (!candidate || typeof candidate !== "object") continue;
-            const row = candidate as ChatRow;
-            if (row.type !== 1) continue;
-
-            if (typeof row.message?.content === "string")
-                row.message.content = convertContent(row.message.content).content;
-            else if (Array.isArray(row.message?.content))
-                rewriteContentNodes(row.message.content);
-        }
-
-        args[1] = JSON.stringify(rows);
-    });
+function find<T>(value: unknown, name: string) {
+    if (!value) throw new Error(`SocialEmbedFixer could not locate Discord's ${name}`);
+    return value as T;
 }
 
 
 function onLoad() {
     initializeStorage();
 
-    const rest = findByProps("get", "post", "put", "patch", "del") as MessageRestClient | undefined;
-    if (!rest) throw new Error("SocialEmbedFixer could not locate Discord's REST client");
-    const unpatchRows = patchDisplayedMessageRows();
+    const rest = find<MessageRestClient & UnfurlRestClient>(findByProps("get", "post", "put", "patch", "del"), "REST client");
+    const messageStore = find<MessageStore>(findByStoreName("MessageStore"), "MessageStore");
+    const selectedChannelStore = find<SelectedChannelStore>(findByStoreName("SelectedChannelStore"), "SelectedChannelStore");
+    const messageCache = find<MessageCache>(findByProps("clearCache", "_channelMessages"), "message cache");
+
+    const sentMessages = createSentMessageConverter({
+        chat: {
+            selectedChannelId: () => selectedChannelStore.getChannelId(),
+            channelMessages: channelId => messageStore.getMessages(channelId)._array,
+            message: (channelId, messageId) => messageStore.getMessage(channelId, messageId),
+            dispatchUpdate(channelId, messageId, content, embeds) {
+                FluxDispatcher.dispatch({ type: "MESSAGE_UPDATE", message: { id: messageId, channel_id: channelId, content, embeds } });
+            },
+            setFields(channelId, messageId, fields) {
+                const messages = messageCache.getOrCreate(channelId);
+                if (!messages.has(messageId)) return;
+                messageCache.commit(messages.update(messageId, message => message.merge(fields)));
+                messageStore.emitChange();
+            }
+        },
+        loadEmbeds: createEmbedLoader(rest),
+        convert: convertContent,
+        enabled: () => pluginStorage.convertAlreadySentMessages
+    });
+
+    let refreshScheduled = false;
+    const scheduleRefresh = () => {
+        if (refreshScheduled) return;
+        refreshScheduled = true;
+        Promise.resolve().then(() => {
+            refreshScheduled = false;
+            sentMessages.refresh();
+        });
+    };
+
     const unpatchRequests = patchMessageRequests(rest, content =>
         pluginStorage.convertMessagesISend ? convertContent(content).content : content
     );
+    messageStore.addChangeListener(scheduleRefresh);
+    selectedChannelStore.addChangeListener(scheduleRefresh);
+    onSettingsChanged(sentMessages.reapply);
+    sentMessages.start();
 
     cleanup = () => {
         unpatchRequests();
-        unpatchRows();
+        onSettingsChanged(undefined);
+        messageStore.removeChangeListener(scheduleRefresh);
+        selectedChannelStore.removeChangeListener(scheduleRefresh);
+        sentMessages.stop();
     };
 }
 

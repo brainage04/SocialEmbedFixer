@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { convertUrls, type EmbedDomains, normalizeEmbedDomain, resolveEmbedDomain } from "./embedUrls";
+import { convertUrls, type EmbedDomains, isSameLink, normalizeEmbedDomain, resolveEmbedDomain } from "./embedUrls";
 
 const domains: EmbedDomains = { x: "fixvx.com", instagram: "vxinstagram.com" };
 
@@ -21,9 +21,9 @@ test("rewrites X and Twitter links while preserving path, query, and punctuation
         result.content,
         "See https://fixvx.com/example/status/123?s=20, then https://fixvx.com/example/status/456."
     );
-    assert.deepEqual(result.convertedUrls, [
-        "https://fixvx.com/example/status/123?s=20",
-        "https://fixvx.com/example/status/456"
+    assert.deepEqual(result.conversions, [
+        { from: "https://x.com/example/status/123?s=20", to: "https://fixvx.com/example/status/123?s=20" },
+        { from: "https://twitter.com/example/status/456", to: "https://fixvx.com/example/status/456" }
     ]);
 });
 
@@ -52,7 +52,7 @@ test("leaves Instagram profile, share and other non-post pages unchanged", () =>
         "https://www.instagram.com/share/reel/BAabc123/",
         "https://www.instagram.com/"
     ].join(" ");
-    assert.deepEqual(convertUrls(input, domains), { content: input, convertedUrls: [] });
+    assert.deepEqual(convertUrls(input, domains), { content: input, conversions: [] });
 });
 
 test("converts each platform to its own service in one message", () => {
@@ -65,7 +65,7 @@ test("converts each platform to its own service in one message", () => {
 
 test("leaves unrelated and already-fixed links unchanged", () => {
     const input = "https://example.com/status/1 https://fixvx.com/example/status/2 https://vxinstagram.com/p/B1/";
-    assert.deepEqual(convertUrls(input, domains), { content: input, convertedUrls: [] });
+    assert.deepEqual(convertUrls(input, domains), { content: input, conversions: [] });
 });
 
 test("rewrites other embed-service domains of the same platform only when enabled", () => {
@@ -101,4 +101,12 @@ test("an invalid configured domain falls back to the platform default instead of
         convertUrls("https://www.instagram.com/p/B1/", { x: "fixupx.com", instagram: "instagram.com" }).content,
         "https://vxinstagram.com/p/B1/"
     );
+});
+
+test("matches links to the same post across hosts of one platform", () => {
+    assert.ok(isSameLink("https://vxtwitter.com/Example/status/1", "https://fixvx.com/example/status/1?s=20"));
+    assert.ok(isSameLink("https://www.instagram.com/tv/A1/", "https://oginstagram.com/p/A1"));
+    assert.ok(!isSameLink("https://x.com/example/status/1", "https://x.com/example/status/2"));
+    assert.ok(!isSameLink("https://x.com/p/A1", "https://instagram.com/p/A1"));
+    assert.ok(!isSameLink("https://youtube.com/watch", "https://youtube.com/watch"));
 });
