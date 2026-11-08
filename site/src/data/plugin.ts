@@ -41,7 +41,7 @@ export const plugin: PluginPage = {
   features: [
     {
       title: 'Converts links you send',
-      text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because most embed services cannot show them.',
+      text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them.',
     },
     {
       title: 'Fixes messages already in the chat',
