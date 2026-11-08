@@ -30,7 +30,7 @@ and open `http://localhost:4321/SocialEmbedFixer/`.
 
 ## Page content
 
-The page text (summary, features, settings, extra sections) is in `src/data/plugin.ts`; the plugin name and description come from `revenge/manifest.json`. Update `src/data/plugin.ts` when the plugin's features or settings change.
+The page text (summary, cards, settings, extra sections) is in `src/data/plugin.ts`; the plugin name and description come from `revenge/manifest.json`. Update `src/data/plugin.ts` when the plugin's behaviour or settings change.
 
 ## Validation
 

@@ -41,23 +41,7 @@ const installerCommands = [
           <li>Tap the install (<strong>+</strong>) button, paste the URL and confirm.</li>
           <li>Open the plugin's settings from the same page to change its options.</li>
         </ol>
-        <p>
-          Updates install themselves: each time Discord starts, Revenge fetches <code>manifest.json</code> from this URL and
-          downloads the new <code>index.js</code> whenever its hash has changed.
-        </p>
-        <dl class="build-info">
-          <div>
-            <dt>Current build</dt>
-            <dd><code title={manifest.hash}>{manifest.hash.slice(0, 12)}</code></dd>
-          </div>
-          <div>
-            <dt>Files</dt>
-            <dd>
-              <a href={withBase('/manifest.json')}><code>manifest.json</code></a> ·{' '}
-              <a href={withBase('/index.js')}><code>index.js</code></a>
-            </dd>
-          </div>
-        </dl>
+        <p>Revenge checks this URL for a new version every time Discord starts, so the plugin updates itself.</p>
       </div>
     </TerminalPanel>
 
@@ -94,10 +78,10 @@ const installerCommands = [
       </div>
     </TerminalPanel>
 
-    <TerminalPanel title="Features">
+    <TerminalPanel title={plugin.cards.title}>
       <div class="grid feature-grid">
         {
-          plugin.features.map((feature) => (
+          plugin.cards.items.map((feature) => (
             <article class="note-card">
               <h3>{feature.title}</h3>
               <p>

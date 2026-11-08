@@ -1,5 +1,5 @@
 /** Page content for this plugin. Keep it in step with the plugin's code in `revenge/`, `vencord/` and `common/`. */
-export interface Feature {
+export interface Card {
   title: string;
   /** Plain text; spans in backticks render as code. */
   text: string;
@@ -25,7 +25,8 @@ export interface PluginPage {
   vencordEntry: 'index.ts' | 'index.tsx';
   /** Folder name under Vencord's `src/userplugins/`, as in DiscordPluginInstaller's catalog. */
   vencordDirectory: string;
-  features: Feature[];
+  /** The card grid: a title naming what the cards describe (what it does, how to use it, how it works). */
+  cards: { title: string; items: Card[] };
   /** The same settings exist on Revenge and Vencord unless `settingsNote` says otherwise. */
   settings: Setting[];
   settingsNote?: string;
@@ -38,20 +39,23 @@ export const plugin: PluginPage = {
     'Rewrites X/Twitter and Instagram links to embed-friendly services such as FixupX and VXInstagram, so Discord shows a proper preview. Links you send are converted before they leave your client, and links in messages already sent are converted on your screen only.',
   vencordEntry: 'index.ts',
   vencordDirectory: 'socialEmbedFixer.vesktop',
-  features: [
-    {
-      title: 'Converts links you send',
-      text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them.',
-    },
-    {
-      title: 'Fixes messages already in the chat',
-      text: 'Links in messages already in the chat, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and sends nothing. If Discord makes no embed for a converted link, the message is left as it was, and turning the setting off puts the original links and embeds back.',
-    },
-    {
-      title: 'Your choice of embed service',
-      text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
-    },
-  ],
+  cards: {
+    title: 'What it does',
+    items: [
+      {
+        title: 'Converts links you send',
+        text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them.',
+      },
+      {
+        title: 'Fixes messages already in the chat',
+        text: 'Links in messages already in the chat, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and sends nothing. If Discord makes no embed for a converted link, the message is left as it was, and turning the setting off puts the original links and embeds back.',
+      },
+      {
+        title: 'Your choice of embed service',
+        text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
+      },
+    ],
+  },
   settings: [
     {
       name: 'Convert Messages I Send',

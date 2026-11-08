@@ -70,23 +70,6 @@ html:root {
   display: none;
 }
 
-.build-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-  color: var(--foreground2);
-  font-size: 0.9rem;
-}
-
-.build-info div {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.build-info dd {
-  margin: 0;
-}
-
 /* Commands stay on one line each and scroll sideways on narrow screens. */
 pre {
   overflow-x: auto;
