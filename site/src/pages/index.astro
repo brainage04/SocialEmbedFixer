@@ -19,7 +19,6 @@ const installerCommands = [
 <SiteLayout>
   <div class="stack">
     <header class="plugin-hero">
-      <p class="meta-row"><span>Discord plugin</span><span>Revenge</span><span>Vencord / Vesktop</span></p>
       <h1>{manifest.name}</h1>
       <p class="lead">{plugin.summary}</p>
       <div class="hero-actions">
@@ -54,7 +53,8 @@ const installerCommands = [
           <div>
             <dt>Files</dt>
             <dd>
-              <a href={withBase('/manifest.json')}>manifest.json</a> · <a href={withBase('/index.js')}>index.js</a>
+              <a href={withBase('/manifest.json')}><code>manifest.json</code></a> ·{' '}
+              <a href={withBase('/index.js')}><code>index.js</code></a>
             </dd>
           </div>
         </dl>
@@ -68,7 +68,7 @@ const installerCommands = [
             href="https://github.com/brainage04/DiscordPluginInstaller">DiscordPluginInstaller</a
           > does every step: it clones or updates Vencord next to itself (<code>../VencordWorkspace</code>), copies the
           plugin in, builds Vencord, installs the build into Vesktop and enables the plugin. It needs Git, Node.js and
-          Corepack (for pnpm).
+          Corepack (for <code>pnpm</code>).
         </p>
         <pre><code>{installerCommands}</code></pre>
         <details>

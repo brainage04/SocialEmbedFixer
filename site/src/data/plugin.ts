@@ -41,27 +41,15 @@ export const plugin: PluginPage = {
   features: [
     {
       title: 'Converts links you send',
-      text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent.',
-    },
-    {
-      title: 'Instagram posts and reels',
-      text: 'Instagram post, reel and IGTV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten; `/tv/` links become `/p/` so every service accepts them. Profiles and `/share/` links are left alone.',
+      text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent. Instagram post, reel and IGTV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten; `/tv/` links become `/p/` so every service accepts them. Profiles and `/share/` links are left alone.',
     },
     {
       title: 'Fixes messages already sent',
       text: 'Links in messages already in the chat are converted on your screen only. Nothing is edited or sent, and embeds that are already there stay as they are.',
     },
     {
-      title: 'Switches between embed services',
-      text: 'Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
-    },
-    {
-      title: 'Your own service',
-      text: 'Pick a custom hostname per platform. A value that is not a valid hostname, or is the platform itself, falls back to the default service.',
-    },
-    {
-      title: 'Keeps old settings',
-      text: 'On Vencord, settings saved under the plugin’s earlier name, XEmbedFixer, carry over.',
+      title: 'Your choice of embed service',
+      text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
     },
   ],
   settings: [

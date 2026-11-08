@@ -41,9 +41,12 @@ html:root {
 }
 
 /* WebTUI makes inline code an inline-block, which pushes long paths onto their own line. */
-:is(p, li, td) code {
+:is(p, li, td, dd) code {
   display: inline;
   padding-inline: 0.4ch;
+  border: 1px solid var(--border-subtle);
+  background: var(--background0);
+  color: var(--accent-highlight);
   overflow-wrap: anywhere;
 }
 

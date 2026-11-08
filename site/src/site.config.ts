@@ -7,7 +7,6 @@ export const siteConfig = {
   description: manifest.description,
   navItems: [
     { name: manifest.name, href: '/' },
-    { name: 'Source', href: sourceHref, external: true },
     { name: 'Main site', href: 'https://brainage04.github.io/', external: true },
   ],
   sourceHref,
