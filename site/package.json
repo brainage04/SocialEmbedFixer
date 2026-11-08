@@ -1,0 +1,27 @@
+{
+  "name": "social-embed-fixer-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@brainage04/astro-shell": "0.5.0",
+    "@webtui/css": "0.1.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "24.19.2",
+    "astro": "7.3.1",
+    "eslint": "10.9.1",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3"
+  }
+}

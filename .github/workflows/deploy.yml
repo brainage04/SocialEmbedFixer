@@ -1,0 +1,16 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: brainage04/AstroShell/.github/workflows/site-deploy.yml@v0.5.1
+    with:
+      path: site
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

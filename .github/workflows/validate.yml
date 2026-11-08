@@ -1,0 +1,14 @@
+name: Validate site
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    uses: brainage04/AstroShell/.github/workflows/site-validate.yml@v0.5.1
+    with:
+      path: site
+    permissions:
+      contents: read

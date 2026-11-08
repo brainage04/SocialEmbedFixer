@@ -1,0 +1,10 @@
+---
+export interface Props {
+  /** Plain text; spans wrapped in backticks render as code. */
+  text: string;
+}
+
+const parts = Astro.props.text.split('`');
+---
+
+{parts.map((part, index) => (index % 2 ? <code>{part}</code> : part))}

@@ -1,0 +1,177 @@
+---
+import SiteLayout from '@brainage04/astro-shell/components/SiteLayout.astro';
+import TerminalPanel from '@brainage04/astro-shell/components/TerminalPanel.astro';
+import { withBase } from '@brainage04/astro-shell/withBase';
+import InlineCode from '../components/InlineCode.astro';
+import { plugin, sourceHref } from '../data/plugin';
+import { readManifest } from '../lib/revengePlugin';
+
+const manifest = await readManifest();
+// The site root serves manifest.json and index.js, so the page's own base URL is the Revenge plugin URL.
+const pluginUrl = new URL(withBase('/'), Astro.site ?? Astro.url.origin).href;
+const installerCommands = [
+  'git clone https://github.com/brainage04/DiscordPluginInstaller.git',
+  'cd DiscordPluginInstaller',
+  `node src/cli.mjs vencord install --plugins ${manifest.name} --enable --restart`,
+].join('\n');
+---
+
+<SiteLayout>
+  <div class="stack">
+    <header class="plugin-hero">
+      <p class="meta-row"><span>Discord plugin</span><span>Revenge</span><span>Vencord / Vesktop</span></p>
+      <h1>{manifest.name}</h1>
+      <p class="lead">{plugin.summary}</p>
+      <div class="hero-actions">
+        <a class="action-button" href="#revenge">Install on Revenge</a>
+        <a class="action-button action-button--ghost" href="#vencord">Install on Vesktop</a>
+        <a class="action-button action-button--ghost" href={sourceHref}>Source on GitHub</a>
+      </div>
+    </header>
+
+    <TerminalPanel title="Install on Revenge" id="revenge" class="install-panel">
+      <div class="panel-copy">
+        <p>Add the plugin to Revenge on Android with this URL:</p>
+        <div class="url-row">
+          <code id="plugin-url">{pluginUrl}</code>
+          <button type="button" class="action-button" id="copy-plugin-url">Copy URL</button>
+        </div>
+        <p id="copy-status" class="muted" role="status" aria-live="polite"></p>
+        <ol>
+          <li>In Discord, open Settings and go to Revenge's <strong>Plugins</strong> page.</li>
+          <li>Tap the install (<strong>+</strong>) button, paste the URL and confirm.</li>
+          <li>Open the plugin's settings from the same page to change its options.</li>
+        </ol>
+        <p>
+          Updates install themselves: each time Discord starts, Revenge fetches <code>manifest.json</code> from this URL and
+          downloads the new <code>index.js</code> whenever its hash has changed.
+        </p>
+        <dl class="build-info">
+          <div>
+            <dt>Current build</dt>
+            <dd><code title={manifest.hash}>{manifest.hash.slice(0, 12)}</code></dd>
+          </div>
+          <div>
+            <dt>Files</dt>
+            <dd>
+              <a href={withBase('/manifest.json')}>manifest.json</a> · <a href={withBase('/index.js')}>index.js</a>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel title="Install on Vesktop (Vencord)" id="vencord">
+      <div class="panel-copy">
+        <p>
+          Vencord has no plugin store for third-party plugins, so the plugin is built into Vencord from source. The <a
+            href="https://github.com/brainage04/DiscordPluginInstaller">DiscordPluginInstaller</a
+          > does every step: it clones or updates Vencord next to itself (<code>../VencordWorkspace</code>), copies the
+          plugin in, builds Vencord, installs the build into Vesktop and enables the plugin. It needs Git, Node.js and
+          Corepack (for pnpm).
+        </p>
+        <pre><code>{installerCommands}</code></pre>
+        <details>
+          <summary>Install by hand instead</summary>
+          <ol>
+            <li>
+              Clone <a href="https://github.com/Vendicated/Vencord">Vencord</a> and run{' '}
+              <code>pnpm install --frozen-lockfile</code> in it.
+            </li>
+            <li>
+              Copy <code>{plugin.vencordEntry}</code>, <code>common/</code> and <code>vencord/</code> from{' '}
+              <a href={sourceHref}>this repository</a> into Vencord's{' '}
+              <code>src/userplugins/{plugin.vencordDirectory}/</code>.
+            </li>
+            <li>Run <code>pnpm build --standalone</code> in Vencord.</li>
+            <li>
+              Copy the four <code>vencordDesktop*</code> files from Vencord's <code>dist/</code> into Vesktop's Vencord folder
+              (<code>~/.config/vesktop/sessionData/vencordFiles</code> unless you set a custom Vencord location), restart
+              Vesktop and enable <strong>{manifest.name}</strong> in Vencord's Plugins settings.
+            </li>
+          </ol>
+        </details>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel title="Features">
+      <div class="grid feature-grid">
+        {
+          plugin.features.map((feature) => (
+            <article class="note-card">
+              <h3>{feature.title}</h3>
+              <p>
+                <InlineCode text={feature.text} />
+              </p>
+            </article>
+          ))
+        }
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel title="Settings">
+      {
+        plugin.settings.length ? (
+          <div class="panel-copy">
+            {plugin.settingsNote && (
+              <p>
+                <InlineCode text={plugin.settingsNote} />
+              </p>
+            )}
+            <div class="table-wrap table-wrap--stack">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Setting</th>
+                    <th scope="col">Default</th>
+                    <th scope="col">What it does</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plugin.settings.map((setting) => (
+                    <tr>
+                      <td data-label="Setting">{setting.name}</td>
+                      <td data-label="Default">{setting.defaultValue}</td>
+                      <td data-label="What it does">
+                        <InlineCode text={setting.description} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <p>
+            <InlineCode text={plugin.settingsNote ?? 'This plugin has no settings.'} />
+          </p>
+        )
+      }
+    </TerminalPanel>
+
+    {
+      plugin.sections.map((section) => (
+        <TerminalPanel title={section.title}>
+          <div class="panel-copy">
+            {section.intro && (
+              <p>
+                <InlineCode text={section.intro} />
+              </p>
+            )}
+            <ul>
+              {section.items.map((item) => (
+                <li>
+                  <InlineCode text={item} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </TerminalPanel>
+      ))
+    }
+  </div>
+</SiteLayout>
+
+<script>
+  import '../scripts/copyPluginUrl';
+</script>

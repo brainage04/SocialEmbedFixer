@@ -1,0 +1,5 @@
+{
+  "extends": "@brainage04/astro-shell/tsconfig.json",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"]
+}
