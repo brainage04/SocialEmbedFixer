@@ -169,16 +169,16 @@ test("a failed request resolves to no embed", async () => {
     assert.equal(await load("https://a.example/1"), null);
 });
 
-test("a rate-limited request waits as Discord asks and tries again", async () => {
+test("a rate-limited request waits as Discord asks and keeps trying until it gets an answer", async () => {
     let calls = 0;
     const load = createEmbedLoader({
         post() {
             calls++;
-            return calls === 1
+            return calls <= 5
                 ? Promise.reject({ status: 429, body: { retry_after: 0 } })
                 : Promise.resolve({ body: { embeds: [{ url: "https://a.example/1" }] } });
         }
     });
     assert.deepEqual(await load("https://a.example/1"), [{ url: "https://a.example/1" }]);
-    assert.equal(calls, 2);
+    assert.equal(calls, 6);
 });

@@ -13,9 +13,11 @@ export interface UnfurlRestClient {
     post(request: { url: string; body: { urls: string[]; }; }): Promise<{ body?: { embeds?: Embed[]; }; }>;
 }
 
-/** Discord answers more than a handful of quick unfurl requests with 429 and the seconds to wait. */
-const RATE_LIMIT_RETRIES = 3;
-
+/**
+ * Discord answers more than a handful of quick unfurl requests with 429 and the seconds to wait. Every
+ * request waits that long and asks again, so a busy channel converts at Discord's pace instead of
+ * leaving the links it was refused unconverted.
+ */
 function rateLimitWait(error: unknown) {
     const response = error as { status?: number; body?: { retry_after?: number; }; } | undefined;
     if (response?.status !== 429) return null;
@@ -44,7 +46,7 @@ export function createEmbedLoader(client: UnfurlRestClient, maxConcurrent = 2) {
     async function request(url: string) {
         await acquire();
         try {
-            for (let attempt = 0; ; attempt++) {
+            for (;;) {
                 const pause = pausedUntil - Date.now();
                 if (pause > 0) await new Promise(resolve => setTimeout(resolve, pause));
                 try {
@@ -52,7 +54,7 @@ export function createEmbedLoader(client: UnfurlRestClient, maxConcurrent = 2) {
                     return body?.embeds?.length ? body.embeds : null;
                 } catch (error) {
                     const wait = rateLimitWait(error);
-                    if (wait === null || attempt >= RATE_LIMIT_RETRIES) return null;
+                    if (wait === null) return null;
                     pausedUntil = Math.max(pausedUntil, Date.now() + wait);
                 }
             }
@@ -61,7 +63,7 @@ export function createEmbedLoader(client: UnfurlRestClient, maxConcurrent = 2) {
         }
     }
 
-    /** Resolves to null when Discord makes no embed for the link or the request fails; failures are not retried later. */
+    /** Resolves to null when Discord makes no embed for the link or the request fails other than by rate limiting. */
     return function loadEmbeds(url: string) {
         let embeds = cache.get(url);
         if (!embeds) {
