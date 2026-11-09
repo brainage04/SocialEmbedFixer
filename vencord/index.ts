@@ -9,15 +9,16 @@ import { definePluginSettings } from "@api/Settings";
 import { OptionType, type PluginDef } from "@utils/types";
 import { FluxDispatcher, MessageStore, RestAPI, SelectedChannelStore } from "@webpack/common";
 
-import {
-    convertUrls,
-    CUSTOM_DOMAIN_VALUE,
-    type Platform,
-    PLATFORMS,
-    resolveEmbedDomain
-} from "../common/embedUrls";
+import { CUSTOM_DOMAIN_VALUE, type Platform, PLATFORMS } from "../common/embedUrls";
+import { convertLinks, createDisplayedSettings, type DisplayedSettings, linkSettings } from "../common/linkSettings";
 import { patchMessageRequests } from "../common/messageRequests";
-import { type ChatMessage, createEmbedLoader, createSentMessageConverter, type UnfurlRestClient } from "../common/sentMessages";
+import {
+    type ChatMessage,
+    createEmbedLoader,
+    createSentMessageConverter,
+    MAX_LINKS_PER_CHANNEL,
+    type UnfurlRestClient
+} from "../common/sentMessages";
 
 function serviceSetting(platform: Platform) {
     const { label, services } = PLATFORMS[platform];
@@ -32,7 +33,7 @@ function serviceSetting(platform: Platform) {
             })),
             { label: "Custom domain", value: CUSTOM_DOMAIN_VALUE }
         ],
-        onChange: reapplyDisplayedLinks
+        onChange: displayedSettingsChanged
     };
 }
 
@@ -40,9 +41,9 @@ function customDomainSetting(platform: Platform) {
     const { label, services } = PLATFORMS[platform];
     return {
         type: OptionType.STRING as const,
-        description: `Custom hostname used when the ${label} embed service is Custom (invalid values fall back to ${services[0].label})`,
+        description: `Custom hostname used when the ${label} embed service is Custom (invalid values fall back to ${services[0].label} for links you send; messages already in the chat keep their current service until the value is valid)`,
         default: "",
-        onChange: reapplyDisplayedLinks
+        onChange: displayedSettingsChanged
     };
 }
 
@@ -56,16 +57,16 @@ const settings = definePluginSettings({
     convertAlreadySentMessages: {
         displayName: "Convert Already Sent Messages",
         type: OptionType.BOOLEAN,
-        description: "Show supported links in messages already in the chat with the selected services, with the embeds Discord makes for them; only changes what you see and posts nothing to the chat, but asks Discord for the embed of each converted link",
+        description: `Show the most recent ${MAX_LINKS_PER_CHANNEL} supported links in the open channel with the selected services, with the embeds Discord makes for them; only changes what you see and posts nothing to the chat, but asks Discord for the embed of each of those links, one at a time`,
         default: true,
-        onChange: reapplyDisplayedLinks
+        onChange: displayedSettingsChanged
     },
     convertOtherServiceDomains: {
         displayName: "Convert Other Service Domains",
         type: OptionType.BOOLEAN,
         description: "Convert links using another known embed service to the service selected for that platform",
         default: true,
-        onChange: reapplyDisplayedLinks
+        onChange: displayedSettingsChanged
     },
     xDomain: serviceSetting("x"),
     xCustomDomain: customDomainSetting("x"),
@@ -73,18 +74,7 @@ const settings = definePluginSettings({
     instagramCustomDomain: customDomainSetting("instagram")
 });
 
-
-function convertContent(content: string) {
-    const { store } = settings;
-    return convertUrls(
-        content,
-        {
-            x: resolveEmbedDomain("x", store.xDomain, store.xCustomDomain),
-            instagram: resolveEmbedDomain("instagram", store.instagramDomain, store.instagramCustomDomain)
-        },
-        store.convertOtherServiceDomains
-    );
-}
+let displayedSettings: DisplayedSettings | undefined;
 
 const sentMessages = createSentMessageConverter({
     chat: {
@@ -96,9 +86,9 @@ const sentMessages = createSentMessageConverter({
         },
         setFields: (channelId, messageId, fields) => updateMessage(channelId, messageId, fields as Record<string, unknown>)
     },
-    loadEmbeds: createEmbedLoader(RestAPI as UnfurlRestClient),
-    convert: convertContent,
-    enabled: () => settings.store.convertAlreadySentMessages
+    loader: createEmbedLoader(RestAPI as UnfurlRestClient),
+    convert: content => convertLinks(content, displayedSettings!.current()),
+    enabled: () => displayedSettings?.current().enabled ?? false
 });
 
 let refreshScheduled = false;
@@ -115,8 +105,8 @@ function scheduleDisplayedLinkRefresh() {
     queueMicrotask(refreshDisplayedLinks);
 }
 
-function reapplyDisplayedLinks() {
-    sentMessages.reapply();
+function displayedSettingsChanged() {
+    displayedSettings?.changed();
 }
 
 export const vencordPlugin = {
@@ -127,8 +117,9 @@ export const vencordPlugin = {
 
     start() {
         unpatchRequests = patchMessageRequests(RestAPI, content =>
-            settings.store.convertMessagesISend ? convertContent(content).content : content
+            settings.store.convertMessagesISend ? convertLinks(content, linkSettings(settings.store)).content : content
         );
+        displayedSettings = createDisplayedSettings(() => settings.store, sentMessages.reapply);
         MessageStore.addChangeListener(scheduleDisplayedLinkRefresh);
         SelectedChannelStore.addChangeListener(scheduleDisplayedLinkRefresh);
         sentMessages.start();
@@ -141,5 +132,7 @@ export const vencordPlugin = {
         SelectedChannelStore.removeChangeListener(scheduleDisplayedLinkRefresh);
         refreshScheduled = false;
         sentMessages.stop();
+        displayedSettings?.stop();
+        displayedSettings = undefined;
     }
 } satisfies Omit<PluginDef, "name">;

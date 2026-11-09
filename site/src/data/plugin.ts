@@ -48,11 +48,11 @@ export const plugin: PluginPage = {
       },
       {
         title: 'Fixes messages already in the chat',
-        text: 'Links in messages already in the chat, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and posts nothing to the chat, but to get the embed your client asks Discord for it, once per converted link. If Discord makes no embed for a converted link, the message is left as it was, and turning the setting off puts the original links and embeds back.',
+        text: 'The most recent 10 supported links in the open channel, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and posts nothing to the chat, but to get the embed your client asks Discord for it: one link at a time, with a pause of 1-2 seconds between requests, and never again for a link it already asked about (the last 200 links are remembered; a link with no embed is asked about again after 30 minutes at the earliest). Switching channel drops the lookups still waiting for the old one. If Discord makes no embed for a converted link, or keeps refusing after 3 retries, the message is left as it was, and turning the setting off puts the original links and embeds back.',
       },
       {
         title: 'Your choice of embed service',
-        text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
+        text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service for links you send. Messages already in the chat change over 1 second after you stop editing the settings, and keep their current service while a custom hostname is not yet valid. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
       },
     ],
   },
@@ -66,7 +66,7 @@ export const plugin: PluginPage = {
       name: 'Convert Already Sent Messages',
       defaultValue: 'On',
       description:
-        'Show supported links in messages already in the chat with the selected services, together with the embeds Discord makes for them. Only changes what you see and posts nothing to the chat, but asks Discord for the embed of each converted link.',
+        'Show the most recent 10 supported links in the open channel with the selected services, together with the embeds Discord makes for them. Only changes what you see and posts nothing to the chat, but asks Discord for the embed of each of those links, one at a time.',
     },
     {
       name: 'Convert Other Service Domains',
@@ -83,7 +83,7 @@ export const plugin: PluginPage = {
       name: 'X/Twitter custom hostname',
       defaultValue: 'Empty',
       description:
-        'Used when the X/Twitter service is Custom domain, for example `example.com`. Invalid values fall back to FixupX.',
+        'Used when the X/Twitter service is Custom domain, for example `example.com`. Invalid values fall back to FixupX for links you send; messages already in the chat keep their current service until the value is valid.',
     },
     {
       name: 'Instagram embed service',
@@ -93,7 +93,8 @@ export const plugin: PluginPage = {
     {
       name: 'Instagram custom hostname',
       defaultValue: 'Empty',
-      description: 'Used when the Instagram service is Custom domain. Invalid values fall back to VXInstagram.',
+      description:
+        'Used when the Instagram service is Custom domain. Invalid values fall back to VXInstagram for links you send; messages already in the chat keep their current service until the value is valid.',
     },
   ],
   sections: [],

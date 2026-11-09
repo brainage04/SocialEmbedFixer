@@ -9,6 +9,7 @@ import { useProxy } from "@vendetta/storage";
 import { Forms } from "@vendetta/ui/components";
 
 import { CUSTOM_DOMAIN_VALUE, type Platform, PLATFORM_IDS, PLATFORMS } from "../../common/embedUrls";
+import { MAX_LINKS_PER_CHANNEL } from "../../common/sentMessages";
 import { pluginStorage, setSetting, type SocialEmbedFixerStorage } from "./state";
 
 const { FormInput, FormRadioRow, FormSection, FormSwitchRow } = Forms;
@@ -65,7 +66,7 @@ function SettingsContent() {
                 />
                 <FormSwitchRow
                     label="Convert Already Sent Messages"
-                    subLabel="Show supported links in messages already in the chat with the selected services, with the embeds Discord makes for them; only changes what you see and posts nothing to the chat, but asks Discord for the embed of each converted link"
+                    subLabel={`Show the most recent ${MAX_LINKS_PER_CHANNEL} supported links in the open channel with the selected services, with the embeds Discord makes for them; only changes what you see and posts nothing to the chat, but asks Discord for the embed of each of those links, one at a time`}
                     value={pluginStorage.convertAlreadySentMessages}
                     onValueChange={(value: boolean) => setSetting("convertAlreadySentMessages", value)}
                 />

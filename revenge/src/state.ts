@@ -7,11 +7,10 @@
 import { storage } from "@vendetta/plugin";
 
 import { defaultEmbedDomain } from "../../common/embedUrls";
+import type { LinkSettingValues } from "../../common/linkSettings";
 
-export interface SocialEmbedFixerStorage {
-    convertAlreadySentMessages: boolean;
+export interface SocialEmbedFixerStorage extends LinkSettingValues {
     convertMessagesISend: boolean;
-    convertOtherServiceDomains: boolean;
     xDomain: string;
     xCustomDomain: string;
     instagramDomain: string;
