@@ -37,11 +37,16 @@ export interface EmbedLoaderOptions {
     random?(): number;
 }
 
+/**
+ * Discord's unfurl endpoint allows about 5 requests per 30 s per user (a real client got a 429 on the
+ * 6th request inside 11 s, with a wait until 30 s after the first). A pause of 6.5-8.5 s after each
+ * request keeps a full run of lookups under that limit, so a normal session never sees a 429.
+ */
 export const EMBED_LOOKUP_LIMITS = {
     cacheSize: 200,
     noEmbedMs: 30 * 60_000,
     maxRetries: 3,
-    pauseMs: [1000, 2000] as const,
+    pauseMs: [6500, 8500] as const,
     retryBaseMs: 2000
 };
 
@@ -56,7 +61,7 @@ function rateLimitWait(error: unknown) {
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 /**
- * Asks Discord for the embeds of links, one request at a time with a pause of a second or two between
+ * Asks Discord for the embeds of links, one request at a time with a pause of several seconds between
  * them, like a person opening links one after another. Results are cached (including "no embed"), and a
  * link Discord keeps rate limiting is given up after a few retries instead of being asked for forever.
  */

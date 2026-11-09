@@ -3,7 +3,7 @@
 A Discord plugin for Revenge (Android) and Vencord (Vesktop) that rewrites X/Twitter and Instagram post links to embed-friendly services such as FixupX and VXInstagram, so Discord shows a proper preview.
 
 - Links you send are converted just before your message or edit is sent. Only the host changes; the rest of the link stays as you typed it.
-- The most recent 10 supported links in the open channel are shown converted, with the embed Discord makes for the converted link. This changes only what you see and posts nothing to the chat, but your client asks Discord for each of those links' embeds, one link at a time with a pause of 1-2 seconds in between.
+- The most recent 10 supported links in the open channel are shown converted, with the embed Discord makes for the converted link. This changes only what you see and posts nothing to the chat, but your client asks Discord for each of those links' embeds, one link at a time with a pause of 6.5-8.5 seconds in between, which keeps it under Discord's limit of about 5 lookups per 30 seconds.
 - X profile, home and search links and Instagram profile and `/share/` links are left alone, because the services make no embed for them.
 
 Page with the full description, settings and install steps: <https://brainage04.github.io/SocialEmbedFixer/>

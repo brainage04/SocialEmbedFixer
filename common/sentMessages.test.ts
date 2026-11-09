@@ -64,7 +64,8 @@ function unfurler(answer: (url: string, call: number) => Reply | Promise<Reply> 
     };
 }
 
-const loaderOptions: EmbedLoaderOptions = { random: () => 0.5 };
+/** Tests of caching, caps and cancelling use a short pause; the pacing test checks the real default. */
+const loaderOptions: EmbedLoaderOptions = { random: () => 0.5, pauseMs: [1000, 2000] };
 
 /** Message stores per channel that, like Discord's, replace a message object on every change. */
 function chatStore(channels: Record<string, ChatMessage[]>) {
@@ -209,25 +210,26 @@ test("a reapply does not ask again for links already looked up", async t => {
     assert.equal(store().get("11")!.content, "https://fixupx.com/a/status/2");
 });
 
-test("looks up one link at a time with a jittered pause of 1-2 s between requests", async t => {
+test("looks up one link at a time with a jittered pause of 6.5-8.5 s between requests", async t => {
     const advance = useFakeTimers(t);
     const fake = unfurler(url => new Promise(resolve => setTimeout(() => resolve({ body: { embeds: [{ url }] } }), 300)));
     const { load } = createEmbedLoader(fake.client, { random: () => 0.5 });
 
     const results = Promise.all(["https://a.example/1", "https://a.example/2", "https://a.example/3"].map(load));
-    await advance(10_000);
+    await advance(30_000);
 
     assert.equal(fake.mostAtOnce(), 1);
-    // Each request takes 300 ms, then the next waits 1000 + 0.5 * 1000 ms.
-    assert.deepEqual(fake.times(), [0, 1800, 3600]);
+    // Each request takes 300 ms, then the next waits 6500 + 0.5 * 2000 ms.
+    assert.deepEqual(fake.times(), [0, 7800, 15_600]);
     assert.deepEqual((await results).map(embeds => (embeds as Embed[])[0].url), fake.urls());
 
+    // Even with the shortest pauses, 6 lookups never fit in Discord's 30 s window.
     const shortest = unfurler();
     const { load: loadQuickly } = createEmbedLoader(shortest.client, { random: () => 0 });
-    void loadQuickly("https://b.example/1");
-    void loadQuickly("https://b.example/2");
-    await advance(5000);
-    assert.equal(shortest.times()[1] - shortest.times()[0], 1000);
+    for (let i = 1; i <= 6; i++) void loadQuickly(`https://b.example/${i}`);
+    await advance(60_000);
+    assert.equal(shortest.times()[1] - shortest.times()[0], 6500);
+    assert.ok(shortest.times()[5] - shortest.times()[0] > 30_000);
 });
 
 test("gives up on a rate-limited link after 3 retries, never waiting less than Discord asks", async t => {
