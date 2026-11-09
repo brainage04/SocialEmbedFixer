@@ -21,8 +21,11 @@ interface PlatformDefinition {
     serviceHosts: readonly string[];
     /** Only links to these paths are converted; profile and other pages are left alone. */
     convertiblePath: RegExp;
-    /** Rewrites a convertible path to the form every offered service accepts. */
-    canonicalPath?(pathname: string): string;
+    /**
+     * Rewrites the start of a convertible path to the form every offered service accepts. It gets the
+     * link as typed from the path on, so anything after the part it rewrites must be kept as it is.
+     */
+    canonicalPath?(path: string): string;
 }
 
 export const PLATFORMS: Record<Platform, PlatformDefinition> = {
@@ -38,7 +41,9 @@ export const PLATFORMS: Record<Platform, PlatformDefinition> = {
         serviceHosts: [
             "fixupx.com", "fxtwitter.com", "fixvx.com", "vxtwitter.com", "twittpr.com", "xfixup.com"
         ],
-        convertiblePath: /^\//
+        // Only posts: the services make no embed for profiles, search or the home timeline
+        // (FixupX serves no preview tags there and VXTwitter shows an error card).
+        convertiblePath: /^\/(?:i\/web|\w+)\/status\/\d+/
     },
     instagram: {
         label: "Instagram",
@@ -57,7 +62,7 @@ export const PLATFORMS: Record<Platform, PlatformDefinition> = {
         // which carry a redirect token instead of a post ID, so both stay on instagram.com.
         convertiblePath: /^\/(?!share\/)(?:[\w.]+\/)?(?:p|reels?|tv)\/[\w-]+/,
         // OGInstagram 404s on /tv/; the same ID works as /p/ on every offered service.
-        canonicalPath: pathname => pathname.replace(/^(\/(?:[\w.]+\/)?)tv\//, "$1p/")
+        canonicalPath: path => path.replace(/^(\/(?:[\w.]+\/)?)tv\//, "$1p/")
     }
 };
 
@@ -85,7 +90,10 @@ for (const platform of PLATFORM_IDS) {
     for (const host of withWww(PLATFORMS[platform].sourceHosts)) HOSTS.set(host, { platform, isSource: true });
 }
 
-const URL_PATTERN = /https?:\/\/[^\s<>{}]+/gi;
+// A backtick ends a link, so a link in inline code keeps its closing backtick.
+const URL_PATTERN = /https?:\/\/[^\s<>{}`]+/gi;
+/** The scheme, the authority (user info, host and port) and the rest of a link as typed. */
+const LINK_PARTS = /^(https?:\/\/)([^/\\?#]*)(.*)$/is;
 const TRAILING_PUNCTUATION = /[),.!?;:'"\]}]+$/;
 const DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
 
@@ -146,9 +154,13 @@ export function convertUrls(
                 ?? defaultEmbedDomain(match.platform);
             if (url.hostname.toLowerCase() === domain) return rawMatch;
 
-            url.hostname = domain;
-            if (platform.canonicalPath) url.pathname = platform.canonicalPath(url.pathname);
-            const replacement = url.toString();
+            // Swap only the host, dropping any port, and keep the rest exactly as typed: re-serialising
+            // the URL would percent-encode characters such as `です` or an emoji right after the link.
+            const parts = LINK_PARTS.exec(source);
+            if (!parts) return rawMatch;
+            const [, scheme, , typedRest] = parts;
+            const rest = platform.canonicalPath ? platform.canonicalPath(typedRest) : typedRest;
+            const replacement = `${scheme}${domain}${rest}`;
             conversions.push({ from: source, to: replacement });
             return replacement + trailing;
         } catch {

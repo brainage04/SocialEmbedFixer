@@ -27,6 +27,59 @@ test("rewrites X and Twitter links while preserving path, query, and punctuation
     ]);
 });
 
+test("rewrites X status links, including their photo, video and web-client forms", () => {
+    const input = [
+        "https://x.com/example/status/123/photo/1",
+        "https://x.com/example/status/123/video/1?s=20",
+        "https://x.com/i/web/status/123",
+        "https://x.com/i/status/123"
+    ].join(" ");
+
+    assert.equal(convertUrls(input, domains).content, [
+        "https://fixvx.com/example/status/123/photo/1",
+        "https://fixvx.com/example/status/123/video/1?s=20",
+        "https://fixvx.com/i/web/status/123",
+        "https://fixvx.com/i/status/123"
+    ].join(" "));
+});
+
+test("leaves X profile, home, search and other non-status pages unchanged", () => {
+    const input = [
+        "https://x.com/jack",
+        "https://x.com/jack/with_replies",
+        "https://twitter.com/home",
+        "https://x.com/",
+        "https://x.com",
+        "https://x.com/search?q=discord",
+        "https://x.com/i/bookmarks",
+        "https://x.com/jack/status/",
+        "https://fxtwitter.com/jack"
+    ].join(" ");
+    assert.deepEqual(convertUrls(input, domains, true), { content: input, conversions: [] });
+});
+
+test("keeps a link in inline code and text right after a link exactly as typed", () => {
+    const cases: [string, string][] = [
+        ["look `https://x.com/a/status/1` here", "look `https://fixvx.com/a/status/1` here"],
+        ["`https://instagram.com/p/ABC`", "`https://vxinstagram.com/p/ABC`"],
+        ["https://x.com/a/status/1です", "https://fixvx.com/a/status/1です"],
+        ["https://x.com/a/status/1😀", "https://fixvx.com/a/status/1😀"],
+        ["https://x.com/a/status/1、next", "https://fixvx.com/a/status/1、next"],
+        ["https://x.com/a/status/1?text=日本%20語#frag", "https://fixvx.com/a/status/1?text=日本%20語#frag"],
+        ["https://www.instagram.com/tv/A1/です", "https://vxinstagram.com/p/A1/です"]
+    ];
+    for (const [input, expected] of cases) assert.equal(convertUrls(input, domains).content, expected);
+});
+
+test("drops a port along with the host", () => {
+    const result = convertUrls("https://x.com:8443/a/status/1 http://instagram.com:80/reel/A1/", domains);
+    assert.equal(result.content, "https://fixvx.com/a/status/1 http://vxinstagram.com/reel/A1/");
+    assert.deepEqual(result.conversions, [
+        { from: "https://x.com:8443/a/status/1", to: "https://fixvx.com/a/status/1" },
+        { from: "http://instagram.com:80/reel/A1/", to: "http://vxinstagram.com/reel/A1/" }
+    ]);
+});
+
 test("rewrites Instagram post, reel and TV links on every Instagram host to the Instagram service", () => {
     const input = [
         "https://www.instagram.com/p/DcpM33KtEqZ/",

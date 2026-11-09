@@ -56,7 +56,7 @@ const settings = definePluginSettings({
     convertAlreadySentMessages: {
         displayName: "Convert Already Sent Messages",
         type: OptionType.BOOLEAN,
-        description: "Show supported links in messages already in the chat with the selected services, with the embeds Discord makes for them; only changes what you see and sends nothing",
+        description: "Show supported links in messages already in the chat with the selected services, with the embeds Discord makes for them; only changes what you see and posts nothing to the chat, but asks Discord for the embed of each converted link",
         default: true,
         onChange: reapplyDisplayedLinks
     },

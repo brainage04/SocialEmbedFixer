@@ -44,11 +44,11 @@ export const plugin: PluginPage = {
     items: [
       {
         title: 'Converts links you send',
-        text: 'Links to `x.com`, `twitter.com` and their `mobile.`/`www.` variants are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them.',
+        text: 'X/Twitter post links on `x.com`, `twitter.com` and their `mobile.`/`www.` variants (`/<user>/status/<id>`, including `/photo/` and `/video/` links, and `/i/web/status/<id>`) are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. X profile, home and search links stay as they are, because the services make no embed for them. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them. Only the host of a link changes; the rest stays exactly as you typed it.',
       },
       {
         title: 'Fixes messages already in the chat',
-        text: 'Links in messages already in the chat, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and sends nothing. If Discord makes no embed for a converted link, the message is left as it was, and turning the setting off puts the original links and embeds back.',
+        text: 'Links in messages already in the chat, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and posts nothing to the chat, but to get the embed your client asks Discord for it, once per converted link. If Discord makes no embed for a converted link, the message is left as it was, and turning the setting off puts the original links and embeds back.',
       },
       {
         title: 'Your choice of embed service',
@@ -66,7 +66,7 @@ export const plugin: PluginPage = {
       name: 'Convert Already Sent Messages',
       defaultValue: 'On',
       description:
-        'Show supported links in messages already in the chat with the selected services, together with the embeds Discord makes for them. Only changes what you see and sends nothing.',
+        'Show supported links in messages already in the chat with the selected services, together with the embeds Discord makes for them. Only changes what you see and posts nothing to the chat, but asks Discord for the embed of each converted link.',
     },
     {
       name: 'Convert Other Service Domains',
