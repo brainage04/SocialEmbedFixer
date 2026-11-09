@@ -1,3 +1,9 @@
+/*
+ * SocialEmbedFixer
+ * Copyright (c) 2026 brainage04
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";

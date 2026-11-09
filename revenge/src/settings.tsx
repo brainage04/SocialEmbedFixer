@@ -1,3 +1,9 @@
+/*
+ * SocialEmbedFixer
+ * Copyright (c) 2026 brainage04
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { ReactNative as RN } from "@vendetta/metro/common";
 import { useProxy } from "@vendetta/storage";
 import { Forms } from "@vendetta/ui/components";

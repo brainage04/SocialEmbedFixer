@@ -1,3 +1,9 @@
+/*
+ * SocialEmbedFixer
+ * Copyright (c) 2026 brainage04
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { findByProps, findByStoreName } from "@vendetta/metro";
 import { FluxDispatcher } from "@vendetta/metro/common";
 

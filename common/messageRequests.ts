@@ -1,6 +1,6 @@
 /*
  * Vencord, a Discord client mod
- * Copyright (c) 2026 Vendicated and contributors
+ * Copyright (c) 2026 brainage04
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
