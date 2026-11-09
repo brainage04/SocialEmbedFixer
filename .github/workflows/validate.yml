@@ -1,4 +1,4 @@
-name: Validate site
+name: Validate
 
 on:
   pull_request:
@@ -6,8 +6,13 @@ on:
     branches: [main]
 
 jobs:
+  test:
+    uses: brainage04/AstroShell/.github/workflows/package-test.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
+    permissions:
+      contents: read
+
   validate:
-    uses: brainage04/AstroShell/.github/workflows/site-validate.yml@v0.5.1
+    uses: brainage04/AstroShell/.github/workflows/site-validate.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
     with:
       path: site
     permissions:

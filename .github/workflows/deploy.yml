@@ -6,8 +6,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    uses: brainage04/AstroShell/.github/workflows/package-test.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
+    permissions:
+      contents: read
+
   deploy:
-    uses: brainage04/AstroShell/.github/workflows/site-deploy.yml@v0.5.1
+    needs: test
+    uses: brainage04/AstroShell/.github/workflows/site-deploy.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
     with:
       path: site
     permissions:
