@@ -20,7 +20,6 @@ export interface Section {
 export interface PluginPage {
   /** GitHub repository name; also the Pages base path (`https://brainage04.github.io/<repository>/`). */
   repository: string;
-  summary: string;
   /** The Vencord entry file in the repository root. */
   vencordEntry: 'index.ts' | 'index.tsx';
   /** Folder name under Vencord's `src/userplugins/`, as in DiscordPluginInstaller's catalog. */
@@ -35,8 +34,6 @@ export interface PluginPage {
 
 export const plugin: PluginPage = {
   repository: 'SocialEmbedFixer',
-  summary:
-    'Rewrites X/Twitter and Instagram links to embed-friendly services such as FixupX and VXInstagram, so Discord shows a proper preview. Links you send are converted before they leave your client, and links in messages already sent are converted on your screen only.',
   vencordEntry: 'index.ts',
   vencordDirectory: 'socialEmbedFixer.vesktop',
   cards: {
