@@ -20,6 +20,7 @@ export interface Section {
 export interface PluginPage {
   /** GitHub repository name; also the Pages base path (`https://brainage04.github.io/<repository>/`). */
   repository: string;
+  summary: string;
   /** The Vencord entry file in the repository root. */
   vencordEntry: 'index.ts' | 'index.tsx';
   /** Folder name under Vencord's `src/userplugins/`, as in DiscordPluginInstaller's catalog. */
@@ -34,6 +35,8 @@ export interface PluginPage {
 
 export const plugin: PluginPage = {
   repository: 'SocialEmbedFixer',
+  summary:
+    'Rewrites X/Twitter and Instagram links to embed-friendly services such as FixupX and VXInstagram, so Discord shows a proper preview. Links you send are converted before they leave your client, and links in messages already sent are converted on your screen only.',
   vencordEntry: 'index.ts',
   vencordDirectory: 'socialEmbedFixer.vesktop',
   cards: {
@@ -41,15 +44,15 @@ export const plugin: PluginPage = {
     items: [
       {
         title: 'Converts links you send',
-        text: 'X/Twitter post links on `x.com`, `twitter.com` and their `mobile.`/`www.` variants (`/<user>/status/<id>`, including `/photo/` and `/video/` links, and `/i/web/status/<id>`) are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. X profile, home and search links stay as they are, because the services make no embed for them. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too; `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them. Only the host of a link changes; the rest stays exactly as you typed it.',
+        text: 'X/Twitter post links on `x.com`, `twitter.com` and their `mobile.`/`www.` variants (`/<user>/status/<id>`, including `/photo/` and `/video/` links, and `/i/web/status/<id>`) are rewritten to your chosen X/Twitter service in new messages and edits, just before they are sent, so everyone sees a proper embed. X profile, home and search links stay as they are, because the services make no embed for them. Instagram post, reel and TV links (`/p/`, `/reel/`, `/reels/`, `/tv/`) are rewritten too, and `/tv/` links are sent as `/p/`. Instagram profile and `/share/` links stay as they are, because not every offered Instagram service can show them. Only the host of a link changes. The rest stays exactly as you typed it.',
       },
       {
         title: 'Fixes messages already in the chat',
-        text: 'The most recent 10 supported links in the open channel, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and posts nothing to the chat, but to get the embed your client asks Discord for it: one link at a time, with a pause of 6.5-8.5 seconds between requests to stay under Discord’s limit of about 5 lookups per 30 seconds, and never again for a link it already asked about (the last 200 links are remembered; a link with no embed is asked about again after 30 minutes at the earliest). Switching channel drops the lookups still waiting for the old one. If Discord makes no embed for a converted link, or keeps refusing after 3 retries, the message is left as it was, and turning the setting off puts the original links and embeds back.',
+        text: 'The most recent 10 supported links in the open channel, including other people’s, are shown with your chosen service and with the embed Discord makes for the converted link. This only changes what you see and posts nothing to the chat, but to get the embed your client asks Discord for it: one link at a time, with a pause of 6.5-8.5 seconds between requests to stay under Discord’s limit of about 5 lookups per 30 seconds, and never again for a link it already asked about (the last 200 links are remembered, and a link with no embed is asked about again after 30 minutes at the earliest). Switching channel drops the lookups still waiting for the old one. If Discord makes no embed for a converted link, or keeps refusing after 3 retries, the message is left as it was, and turning the setting off puts the original links and embeds back.',
       },
       {
         title: 'Your choice of embed service',
-        text: 'Pick a service per platform, or your own hostname; a value that is not a valid hostname, or is the platform itself, falls back to the default service for links you send. Messages already in the chat change over 1 second after you stop editing the settings, and keep their current service while a custom hostname is not yet valid. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
+        text: 'Pick a service per platform, or your own hostname. A value that is not a valid hostname, or is the platform itself, falls back to the default service for links you send. Messages already in the chat change over 1 second after you stop editing the settings, and keep their current service while a custom hostname is not yet valid. Links that already use another known service (for example `vxtwitter.com` or `ddinstagram.com`) can be moved to the service you picked.',
       },
     ],
   },
@@ -80,7 +83,7 @@ export const plugin: PluginPage = {
       name: 'X/Twitter custom hostname',
       defaultValue: 'Empty',
       description:
-        'Used when the X/Twitter service is Custom domain, for example `example.com`. Invalid values fall back to FixupX for links you send; messages already in the chat keep their current service until the value is valid.',
+        'Used when the X/Twitter service is Custom domain, for example `example.com`. Invalid values fall back to FixupX for links you send. Messages already in the chat keep their current service until the value is valid.',
     },
     {
       name: 'Instagram embed service',
@@ -91,7 +94,7 @@ export const plugin: PluginPage = {
       name: 'Instagram custom hostname',
       defaultValue: 'Empty',
       description:
-        'Used when the Instagram service is Custom domain. Invalid values fall back to VXInstagram for links you send; messages already in the chat keep their current service until the value is valid.',
+        'Used when the Instagram service is Custom domain. Invalid values fall back to VXInstagram for links you send. Messages already in the chat keep their current service until the value is valid.',
     },
   ],
   sections: [],

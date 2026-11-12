@@ -20,6 +20,12 @@ html:root {
   text-shadow: 0 0 2rem color-mix(in srgb, var(--accent-primary) 16%, transparent);
 }
 
+.lead {
+  max-width: 52rem;
+  color: var(--foreground1);
+  font-size: 1.05rem;
+}
+
 .panel-copy {
   display: grid;
   gap: 0.85rem;
@@ -64,10 +70,10 @@ html:root {
   display: none;
 }
 
-/* Commands stay on one line each and scroll sideways on narrow screens. */
+/* Long commands wrap instead of scrolling sideways. Copying still gives one command per line. */
 pre {
-  overflow-x: auto;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   margin: 0;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border-subtle);
