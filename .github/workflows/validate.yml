@@ -7,12 +7,12 @@ on:
 
 jobs:
   test:
-    uses: brainage04/AstroShell/.github/workflows/package-test.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
+    uses: brainage04/AstroShell/.github/workflows/package-test.yml@ad8dacc98f5c7684016fcc01cb1f3ae6e95705ee # v0.6.0
     permissions:
       contents: read
 
   validate:
-    uses: brainage04/AstroShell/.github/workflows/site-validate.yml@e07fdc652eae9ed49f0d77b20f6c2326ec4169c0 # v0.5.2
+    uses: brainage04/AstroShell/.github/workflows/site-validate.yml@ad8dacc98f5c7684016fcc01cb1f3ae6e95705ee # v0.6.0
     with:
       path: site
     permissions:
