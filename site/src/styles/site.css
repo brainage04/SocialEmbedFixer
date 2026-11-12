@@ -70,7 +70,7 @@ html:root {
   display: none;
 }
 
-/* Long commands wrap instead of scrolling sideways. Copying still gives one command per line. */
+/* Wrapped commands still copy as one command per line. */
 pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
