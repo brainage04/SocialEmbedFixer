@@ -20,6 +20,12 @@ updates:
       - dependency-name: '@brainage04/astro-shell'
         update-types:
           - version-update:semver-minor
+      # TypeScript 7 has no JS compiler API yet, and both @astrojs/check and typescript-eslint need it, so npm ci fails.
+      # Drop this once https://github.com/withastro/roadmap/discussions/1321 and
+      # https://github.com/typescript-eslint/typescript-eslint/issues/10940 ship TypeScript 7 support.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
